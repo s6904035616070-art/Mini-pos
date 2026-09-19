@@ -66,15 +66,25 @@ export default function SellPage() {
     }
 
     try {
-      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHAT_ID,
-          text: messageText,
-          parse_mode: 'HTML',
-        }),
-      })
+      const response = await fetch(
+        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: messageText,
+            parse_mode: 'HTML',
+          }),
+        }
+      )
+
+      // fetch ไม่ throw error แม้ Telegram ตอบ 400/401 กลับมา
+      // ต้องเช็ค response.ok เองแล้ว log body ไว้ดูสาเหตุจริง (เช่น token ผิด, chat_id ผิด, บอทไม่ได้เป็นแอดมิน)
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => null)
+        console.error('Telegram API ตอบกลับผิดพลาด:', response.status, errorBody)
+      }
     } catch (notifyError) {
       // ไม่ throw ต่อ แค่ log ไว้ ไม่ให้กระทบระบบขาย
       console.error('ส่งแจ้งเตือน Telegram ไม่สำเร็จ:', notifyError)
