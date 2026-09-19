@@ -1,41 +1,40 @@
-// API Route ฝั่ง server สำหรับส่งข้อความแจ้งเตือนเข้า Telegram
-// เก็บ Bot Token ไว้ที่นี่เท่านั้น (ไม่ใช้ NEXT_PUBLIC_) เพื่อไม่ให้หลุดไปอยู่ในโค้ดฝั่ง browser
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function POST(request) {
   try {
-    const { text } = await request.json()
+    let body
+    try {
+      body = await request.json()
+    } catch {
+      return Response.json(
+        { ok: false, message: 'รูปแบบ request body ไม่ถูกต้อง (ต้องเป็น JSON ที่มี text)' },
+        { status: 400 }
+      )
+    }
+
+    const { text } = body || {}
+    if (!text || typeof text !== 'string') {
+      return Response.json({ ok: false, message: 'กรุณาส่ง text ที่เป็นข้อความมาด้วย' }, { status: 400 })
+    }
 
     const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID
 
-    // ถ้ายังไม่ได้ตั้งค่า env vars ให้ตอบกลับแบบไม่ error รุนแรง (ไม่ให้กระทบระบบขาย)
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-      return Response.json(
-        { ok: false, message: 'Telegram config ยังไม่ถูกตั้งค่า' },
-        { status: 200 }
-      )
+      return Response.json({ ok: false, message: 'Telegram config ยังไม่ถูกตั้งค่า' }, { status: 200 })
     }
 
     const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`
-
     const response = await fetch(telegramUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
-        text: text,
-        parse_mode: 'HTML',
-      }),
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }),
     })
 
     const result = await response.json()
-
     return Response.json({ ok: response.ok, result }, { status: 200 })
   } catch (error) {
-    // ไม่ throw error ออกไป เพื่อไม่ให้กระทบหน้าขายสินค้า
-    return Response.json(
-      { ok: false, message: error.message },
-      { status: 200 }
-    )
+    return Response.json({ ok: false, message: error.message }, { status: 200 })
   }
 }
