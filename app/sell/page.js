@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
 // Telegram config: อ่านจาก NEXT_PUBLIC env vars (ยิงตรงจาก client ตามที่ระบุ)
-const TELEGRAM_BOT_TOKEN = process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN
-const TELEGRAM_CHAT_ID = process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID
 
 // เกณฑ์แจ้งเตือนสต๊อกเหลือน้อย
 const LOW_STOCK_THRESHOLD = 5
